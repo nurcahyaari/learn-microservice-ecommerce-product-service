@@ -125,31 +125,22 @@ export class ProductsService implements ProductServiceInterface {
       if (!variant) {
         throw new Error('variant is not found or empty');
       }
-      const productVariantQuantityById = await this.cacheManager.get(
-        `${productVariantId}-quantity`,
-      );
-
-      if (productVariantQuantityById) {
-        if (productVariantQuantityById <= 0) {
-          throw new Error('variant is empty');
-        }
-      }
 
       await this.cacheManager.set(
         `${userId}-order-product`,
         JSON.stringify(variant),
       );
       variant.quantity -= quantity;
+      if (variant.quantity <= 0) {
+        throw new Error('variant is empty');
+      }
       await this.productVariantsRepository.save(variant);
-      await this.cacheManager.set(
-        `${productVariantId}-quantity`,
-        variant.quantity,
-      );
 
       return variant;
     } catch (e) {
+      console.log('failed to start transaction');
       console.log(e);
-      return e;
+      throw e;
     }
   }
 
@@ -158,7 +149,7 @@ export class ProductsService implements ProductServiceInterface {
       await this.cacheManager.del(`${userId}-order-product`);
       return true;
     } catch (e) {
-      return e;
+      throw e;
     }
   }
 
@@ -173,18 +164,11 @@ export class ProductsService implements ProductServiceInterface {
       );
       await this.productVariantsRepository.save(productVariant);
 
-      const productVariantQuantityById: number = await this.cacheManager.get(
-        `${productVariant.product_variant_id}-quantity`,
-      );
-      await this.cacheManager.set(
-        `${productVariant.product_variant_id}-quantity`,
-        productVariantQuantityById + productVariant.quantity,
-      );
       await this.cacheManager.del(`${userId}-order-product`);
       return true;
     } catch (e) {
       console.log(e);
-      return e;
+      throw e;
     }
   }
 }

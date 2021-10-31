@@ -18,16 +18,13 @@ export class SystemUserAuthMiddleware implements NestMiddleware {
           },
         },
       );
-      console.log(resp.status);
       if (resp.status !== 200) {
-        console.log('Error');
         throw new UnauthorizedException();
       }
       req.headers.token = req.headers['authorization'];
       req.headers.user = resp.data;
       next();
     } catch (e) {
-      console.log(e.message);
       throw new UnauthorizedException();
     }
   }

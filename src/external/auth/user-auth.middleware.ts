@@ -18,9 +18,7 @@ export class UserAuthMiddleware implements NestMiddleware {
           },
         },
       );
-      console.log(resp.status);
       if (resp.status !== 200) {
-        console.log('Error');
         throw new UnauthorizedException();
       }
 

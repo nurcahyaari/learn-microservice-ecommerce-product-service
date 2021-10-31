@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -77,39 +78,58 @@ export class ProductsController {
 
   @ApiBearerAuth('token')
   @Patch('/product_variant/patch-stock/transaction-start/:product_variant_id')
-  StartPatchProductVariantUserStock(
+  async StartPatchProductVariantUserStock(
     @Param() param: ProductVariantParam,
     @Body() body: ProductVariantPatchStock,
     @Request() req,
   ) {
-    const user = req.headers.user;
-    return this.productService.StartPatchProductVariantUserStock(
-      user.user_id,
-      param.product_variant_id,
-      body.quantity,
-    );
+    try {
+      const user = req.headers.user;
+      const res = await this.productService.StartPatchProductVariantUserStock(
+        user.user_id,
+        param.product_variant_id,
+        body.quantity,
+      );
+      console.log('patch-product-qty - success');
+      return res;
+    } catch (e) {
+      console.log('patch-product-qty - failed');
+      console.log(e);
+      throw new BadRequestException(e.message);
+    }
   }
 
   @ApiBearerAuth('token')
   @Get('/product_variant/patch-stock/transaction/commit')
-  CommitPatchProductVariantUserStock(@Request() req) {
-    const user = req.headers.user;
-    return this.productService.CommitPatchProductVariantUserStock(user.user_id);
+  async CommitPatchProductVariantUserStock(@Request() req) {
+    try {
+      console.log('commit');
+      const user = req.headers.user;
+      const res = await this.productService.CommitPatchProductVariantUserStock(
+        user.user_id,
+      );
+      return res;
+    } catch (e) {
+      console.log('commit - failed');
+      throw new BadRequestException(e.message);
+    }
   }
 
   @ApiBearerAuth('token')
   @Get('/product_variant/patch-stock/transaction/rollback')
-  RollbackPatchProductVariantUserStock(@Request() req) {
+  async RollbackPatchProductVariantUserStock(@Request() req) {
     try {
       console.log('rollback');
       const user = req.headers.user;
-      return this.productService.RollbackPatchProductVariantUserStock(
-        user.user_id,
-      );
+      const res =
+        await this.productService.RollbackPatchProductVariantUserStock(
+          user.user_id,
+        );
+      return res;
     } catch (e) {
       console.log('rollback - failed');
       console.log(e);
-      return e;
+      throw new BadRequestException(e.message);
     }
   }
 }
